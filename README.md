@@ -7,7 +7,7 @@ You can run this project by calling
 
 ```bash
 cargo build
-./target/debug/aoc202.exe [day number] [input file path]
+./target/debug/aoc2020.exe [day number] [input file path]
 ```
 
 or
@@ -16,6 +16,6 @@ or
 cargo run [day number] [input file path]
 ```
 
-By default, `./input.txt` will be used for inputs.
+By default, `./input.txt` will be used as the input file path.
 
 ![HASHIDE SORE YO](https://i.imgur.com/6I7iGhO.png)
