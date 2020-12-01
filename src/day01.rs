@@ -3,7 +3,7 @@ use itertools::Itertools;
 
 pub fn day01(input: String){
     // part 1: put all the numbers in a set, iteratively check if a number's complement is in the set.
-    // just woke up this is where my brain's at. O(n).
+    // just woke up this is where my brain's at. O(nlogn).
     let mut numset: HashSet<i32> = HashSet::new();
 
     let nums = input.lines()
