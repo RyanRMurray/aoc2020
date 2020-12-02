@@ -2,11 +2,12 @@ use std::env;
 use std::io;
 use std::fs;
 mod day01;
+mod day02;
 
 type Solution = fn(String) -> ();
 
 fn main() {
-    let solutions: Vec<Solution> = vec![day01::day01];
+    let solutions: Vec<Solution> = vec![day01::day01, day02::day02];
     let args: Vec<String> = env::args().collect();
     let mut day_arg = String::new();
     let input_arg;
