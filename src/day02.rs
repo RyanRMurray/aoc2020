@@ -1,16 +1,18 @@
+use regex::Regex;
+
 #[derive(Debug, Clone)]
 struct Password {
-    range: (usize,usize),
+    fst: usize,
+    snd: usize,
     sym: char,
     pwd: String
 }
 
 impl Password {
-
     fn verify(&self) -> bool{
         let matches = self.pwd.matches(self.sym).count();
         
-        self.range.0 <= matches && matches <= self.range.1
+        self.fst <= matches && matches <= self.snd
     }
 
     fn match_char(&self, i: usize) -> bool{
@@ -21,45 +23,50 @@ impl Password {
     }
 
     fn other_verify(&self) -> bool{
-        let fst = self.match_char(self.range.0);
-        let snd = self.match_char(self.range.1);
+        let fst = self.match_char(self.fst);
+        let snd = self.match_char(self.snd);
 
         !(fst && snd) && (fst || snd)
     }
 }
 
 pub fn day02(input: String){
+    let re =
+        Regex::new(
+            r"(\d+)-(\d+) (.): (\w+)"
+        )
+        .unwrap();
+    
     let mut pwds: Vec::<Password> = Vec::new();
     let mut valid;
+
     //parse passwords into the above struct
-    let pwds_it: Vec<Vec<&str>> =
+    let pwds_it =
         input
-        .lines()
-        .map(|l| l.split(' ').collect())
-        .collect();
+        .lines();
 
     for l in pwds_it{
-        let rs: Vec<usize> = 
-            l[0]
-            .split('-')
-            .map(|n| n.parse().expect(":(")).collect();
-        
-            pwds.push(Password {
-            range : (rs[0], rs[1]),
-            sym   : l[1].chars().next().unwrap(),
-            pwd   : String::from(l[2])
-        })
+        for cap in re.captures_iter(l){
+            pwds.push(Password{
+                fst : cap[1].parse().expect(":("),
+                snd : cap[2].parse().expect(":("),
+                sym : cap[3].chars().next().unwrap(),
+                pwd : cap[4].to_string()
+            })
+        }
     }
 
     //count valid
-    valid = pwds.clone().into_iter()
+    valid = 
+        pwds.clone().into_iter()
         .filter(|p| p.verify())
         .count();
     
-        println!("Part 1: {}", valid);
+    println!("Part 1: {}", valid);
 
     //count valid for part 2
-    valid = pwds.into_iter()
+    valid = 
+        pwds.into_iter()
         .filter(|p| p.other_verify())
         .count();
     
