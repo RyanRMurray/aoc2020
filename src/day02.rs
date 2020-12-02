@@ -29,36 +29,39 @@ impl Password {
 }
 
 pub fn day02(input: String){
-    //parse passwords into the above struct
-    let pwds_it: Vec<Vec<&str>> = input.lines().map(|l| l.split(" ").collect()).collect();
     let mut pwds: Vec::<Password> = Vec::new();
-    let mut valid = 0;
+    let mut valid;
+    //parse passwords into the above struct
+    let pwds_it: Vec<Vec<&str>> =
+        input
+        .lines()
+        .map(|l| l.split(' ').collect())
+        .collect();
 
     for l in pwds_it{
-        let rs: Vec<usize> = l[0].split("-").map(|n| n.parse().expect(":(")).collect();
-        pwds.push(Password {
+        let rs: Vec<usize> = 
+            l[0]
+            .split('-')
+            .map(|n| n.parse().expect(":(")).collect();
+        
+            pwds.push(Password {
             range : (rs[0], rs[1]),
-            sym   : l[1].chars().nth(0).unwrap(),
+            sym   : l[1].chars().next().unwrap(),
             pwd   : String::from(l[2])
         })
     }
 
     //count valid
-    for p in pwds.clone(){
-        if p.verify(){
-            valid += 1;
-        }
-    }
-
-    println!("Part 1: {}", valid);
-    valid = 0;
+    valid = pwds.clone().into_iter()
+        .filter(|p| p.verify())
+        .count();
+    
+        println!("Part 1: {}", valid);
 
     //count valid for part 2
-    for p in pwds{
-        if p.other_verify(){
-            valid += 1;
-        }
-    }
+    valid = pwds.into_iter()
+        .filter(|p| p.other_verify())
+        .count();
     
     println!("Part 2: {}", valid);
 }
