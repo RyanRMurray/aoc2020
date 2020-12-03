@@ -41,11 +41,7 @@ pub fn day02(input: String){
     let mut valid;
 
     //parse passwords into the above struct
-    let pwds_it =
-        input
-        .lines();
-
-    for l in pwds_it{
+    for l in input.lines(){
         for cap in re.captures_iter(l){
             pwds.push(Password{
                 fst : cap[1].parse().expect(":("),
@@ -58,7 +54,7 @@ pub fn day02(input: String){
 
     //count valid
     valid = 
-        pwds.clone().into_iter()
+        pwds.iter()
         .filter(|p| p.verify())
         .count();
     
@@ -66,9 +62,9 @@ pub fn day02(input: String){
 
     //count valid for part 2
     valid = 
-        pwds.into_iter()
+        pwds.iter()
         .filter(|p| p.other_verify())
         .count();
-    
+
     println!("Part 2: {}", valid);
 }
