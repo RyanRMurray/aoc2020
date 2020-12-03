@@ -1,6 +1,7 @@
 use std::env;
 use std::io;
 use std::fs;
+mod utils;
 mod day01;
 mod day02;
 mod day03;
