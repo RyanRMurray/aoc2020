@@ -1,16 +1,18 @@
 use std::env;
 use std::io;
 use std::fs;
+use std::time::{Instant};
 mod utils;
 mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 
 type Solution = fn(String) -> ();
 
 fn main() {
-    let solutions: Vec<Solution> = vec![day01::day01, day02::day02, day03::day03, day04::day04];
+    let solutions: Vec<Solution> = vec![day01::day01, day02::day02, day03::day03, day04::day04, day05::day05];
     let args: Vec<String> = env::args().collect();
     let mut day_arg = String::new();
     let input_arg;
@@ -38,9 +40,16 @@ fn main() {
     let input = fs::read_to_string(input_arg)
         .expect("Could not open input file.");
 
+    let curr = Instant::now();
+
     //get the solution
     match solutions.get(day-1){
         None => println!("Invalid day, or I've not written a solution for that one yet!"),
-        Some(solve) => solve(input)
+        Some(solve) => {
+            solve(input);
+            println!("Solved in {:.}ms", (curr.elapsed().as_nanos() as f64 )/1000000.0)
+        }
     }
+
+
 }

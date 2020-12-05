@@ -12,7 +12,6 @@ fn getf<'a>(pp: &'a HashMap<&str,&str>, f:&str) -> &'a str{
         Some(v) => v,
         _       => panic!("Invalid field!")
     }
-    
 }
 
 //behold! the ugliest thing i have ever written!
@@ -89,5 +88,4 @@ pub fn day04(input:String){
     //part 2: validate fields
     let valids2 = valids.filter(|pp| validate_fields(pp));
     println!("Part 1: {}", valids2.count());
-    
 }
