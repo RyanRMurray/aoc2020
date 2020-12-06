@@ -1,23 +1,9 @@
 use std::collections::HashSet;
 
 fn get_id(pass:&str) -> u32{
-    let (row,col) = pass.split_at(7);
-    let mut rownum = 0;
-    let mut colnum = 0;
-
-    for (i,c) in (0..7).rev().zip(row.chars()){
-        if c == 'B'{
-            rownum += 2u32.pow(i);
-        }
-    }
-
-    for (i,c) in (0..3).rev().zip(col.chars()){
-        if c == 'R'{
-            colnum += 2u32.pow(i);
-        }
-    }
-
-    return (rownum * 8) + colnum
+    return 
+        pass.chars()
+        .fold(0, |i,c| (i<<1) + ("BR".contains(c) as u32));
 }
 
 pub fn day05(input:String){
@@ -32,7 +18,6 @@ pub fn day05(input:String){
     println!("Part 1: {}",
         ids.iter().max().unwrap()
     );
-    
     //get unused id
     let id_set = ids.into_iter().collect::<HashSet<u32>>();
     let unused = (0..1024).collect::<HashSet<u32>>();
