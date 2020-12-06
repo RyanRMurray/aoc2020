@@ -33,7 +33,6 @@ pub fn day05(input:String){
         ids.iter().max().unwrap()
     );
     
-
     //get unused id
     let id_set = ids.into_iter().collect::<HashSet<u32>>();
     let unused = (0..1024).collect::<HashSet<u32>>();
