@@ -49,7 +49,7 @@ pub fn day07(input:String){
                 (
                     right.name("desc_r").unwrap().as_str()
                 ,
-                right.name("amt").unwrap().as_str().parse().expect(":(")
+                    right.name("amt").unwrap().as_str().parse().expect(":(")
                 )
             );
         }

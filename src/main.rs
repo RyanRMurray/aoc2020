@@ -10,6 +10,7 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
 
 
 
@@ -19,7 +20,7 @@ fn main() {
     let solutions: Vec<Solution> = 
         vec![
             day01::day01, day02::day02, day03::day03, day04::day04,
-            day05::day05, day06::day06, day07::day07
+            day05::day05, day06::day06, day07::day07, day08::day08
         ];
     let args: Vec<String> = env::args().collect();
     let mut day_arg = String::new();
