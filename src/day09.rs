@@ -1,5 +1,6 @@
 use arraydeque::{ArrayDeque, Wrapping};
 use std::cmp::Ordering;
+use std::collections::VecDeque;
 
 const SIZE: usize = 25;
 
@@ -17,21 +18,23 @@ fn validate(q:&Visible, val:i64) -> bool{
     .is_some()
 }
 
-fn contig_set(mut vals: Vec<i64>, magic_num: i64) -> Vec<i64>{
-    let mut set: Vec<i64>;
-    for v in vals.clone().into_iter(){
-        set = vec![v];
-        vals.remove(0);
-        for vs in vals.iter(){
-            set.push(*vs);
-            match set.iter().sum::<i64>().cmp(&magic_num){
-                Ordering::Equal => return set,
-                Ordering::Greater => break,
-                _ => ()
-            }
+fn contig_set(mut vals: Vec<i64>, magic_num: i64) -> VecDeque<i64>{
+    let mut set: VecDeque<i64> = VecDeque::new();
+    let mut sum: i64 = 0;
+
+    while sum != magic_num{
+        match sum.cmp(&magic_num){
+            Ordering::Greater =>
+                sum -= set.pop_front().unwrap(),
+            Ordering::Less =>{
+                sum += vals[0];
+                set.push_back(vals[0]);
+                vals.remove(0);
+            },
+            _ => break
         }
     }
-    panic!("No set found for part 2. Is the input correct?")
+    return set
 }
 
 pub fn day09(input:String){
@@ -63,7 +66,11 @@ pub fn day09(input:String){
 
     //part 2: find the contiguous set that sums to the magic number
 
-    let mut res = contig_set(vals, magic_num);
+    let mut res =
+        contig_set(vals, magic_num)
+        .into_iter()
+        .collect::<Vec<_>>();
+
     res.sort();
 
     println!("Part 2: {:?}", res[0] + res.last().unwrap())
