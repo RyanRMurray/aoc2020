@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
+use std::fmt::Display;
 
 pub type Pt = (i32,i32);
 
@@ -37,4 +38,8 @@ impl<T> Grid<T>{
             _       => &self.default
         }
     }
+}
+
+pub fn answer<A:Display,B:Display>(a:A,b:B) -> (String, String){
+    (a.to_string(), b.to_string())
 }

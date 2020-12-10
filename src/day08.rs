@@ -1,3 +1,4 @@
+use crate::utils::answer;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -79,7 +80,9 @@ fn to_instr(x : &str) -> Instr{
     }
 }
 
-pub fn day08(input:String){
+pub fn day08(input:String) -> (String, String){
+    let p1;
+    let p2;
     let instrs : HashMap<i32,Instr> =
         (0..).zip(
             input.lines()
@@ -96,7 +99,7 @@ pub fn day08(input:String){
     };
 
     //part 1: run until a loop is found
-    println!("Part 1: {:?}", machine.clone().loop_debug().unwrap());
+    p1 = machine.clone().loop_debug().unwrap();
 
     //part 2: enumerate variants, find acc of terminating
 
@@ -131,7 +134,7 @@ pub fn day08(input:String){
         )
         .collect();
     
-    println!("Part 2: {}",
+    p2 =
         variants.into_iter()
         .map(|mut m| m.loop_debug())
         .find( |res|
@@ -141,6 +144,7 @@ pub fn day08(input:String){
             }
         )
         .unwrap()
-        .unwrap()
-    )
+        .unwrap();
+    
+    answer(p1, p2)
 }

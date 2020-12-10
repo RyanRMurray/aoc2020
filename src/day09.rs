@@ -1,3 +1,4 @@
+use crate::utils::answer;
 use arraydeque::{ArrayDeque, Wrapping};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
@@ -37,7 +38,9 @@ fn contig_set(mut vals: Vec<i64>, magic_num: i64) -> VecDeque<i64>{
     return set
 }
 
-pub fn day09(input:String){
+pub fn day09(input:String) -> (String, String){
+    let p1;
+    let p2;
     let vals = 
         input.lines()
         .map(|x| x.parse().expect(":("))
@@ -61,8 +64,8 @@ pub fn day09(input:String){
         }
         visible.push_back(*q);
     }
-
-    println!("Part 1: {}", magic_num);
+    
+    p1 = magic_num;
 
     //part 2: find the contiguous set that sums to the magic number
 
@@ -73,5 +76,7 @@ pub fn day09(input:String){
 
     res.sort();
 
-    println!("Part 2: {:?}", res[0] + res.last().unwrap())
+    p2 = res[0] + res.last().unwrap();
+
+    answer(p1, p2)
 }

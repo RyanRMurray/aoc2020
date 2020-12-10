@@ -1,6 +1,9 @@
+use crate::utils::answer;
 use std::collections::HashSet;
 
-pub fn day06(input:String){
+pub fn day06(input:String) -> (String,String){
+    let p1;
+    let p2;
     //part 1: create sets for each group, then sum their lengths
     let answers =
         input.split("\n\n")
@@ -9,8 +12,8 @@ pub fn day06(input:String){
             .filter(|c| *c != '\n')
             .collect::<HashSet<char>>()
         );
-
-    println!("Part 1: {}", answers.fold(0, |acc,s| acc + s.len()));
+    
+    p1 = answers.fold(0, |acc,s| acc + s.len());
 
     //part 2: create sets for each individual, get the intersections of each group, then sum their lengths
     //note to self, 'a'..'z' isn't the alphabet, 'a'..='z' is. 
@@ -28,6 +31,6 @@ pub fn day06(input:String){
             )
         );
     
-    println!("Part 2: {}", answers2.fold(0, |acc,a| acc+a.len()))
-    
+    p2 = answers2.fold(0, |acc,a| acc + a.len());
+    answer(p1,p2)
 }

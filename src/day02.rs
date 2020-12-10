@@ -1,3 +1,4 @@
+use crate::utils::answer;
 use regex::Regex;
 
 #[derive(Debug, Clone)]
@@ -30,7 +31,9 @@ impl Password {
     }
 }
 
-pub fn day02(input: String){
+pub fn day02(input: String) -> (String,String){
+    let p1;
+    let p2;
     let re =
         Regex::new(
             r"(\d+)-(\d+) (.): (\w+)"
@@ -38,7 +41,6 @@ pub fn day02(input: String){
         .unwrap();
     
     let mut pwds: Vec::<Password> = Vec::new();
-    let mut valid;
 
     //parse passwords into the above struct
     for l in input.lines(){
@@ -53,18 +55,16 @@ pub fn day02(input: String){
     }
 
     //count valid
-    valid = 
+    p1 = 
         pwds.iter()
         .filter(|p| p.verify())
         .count();
-    
-    println!("Part 1: {}", valid);
 
     //count valid for part 2
-    valid = 
+    p2 = 
         pwds.iter()
         .filter(|p| p.other_verify())
         .count();
 
-    println!("Part 2: {}", valid);
+    answer(p1,p2)
 }

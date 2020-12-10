@@ -1,3 +1,4 @@
+use crate::utils::answer;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -62,7 +63,9 @@ fn validate_fields(pp: &HashMap<&str,&str>) -> bool{
     eyes.contains(&getf(pp, "ecl"))
 }
 
-pub fn day04(input:String){
+pub fn day04(input:String) -> (String,String){
+    let p1;
+    let p2;
     //parse passports
     let mut passports: Vec<HashMap<&str,&str>> = Vec::new();
     let re =
@@ -83,9 +86,11 @@ pub fn day04(input:String){
 
     //part 1: find number of valid passports
     let valids = passports.iter().filter(|pp| valid_fields(pp));
-    println!("Part 1: {}", valids.clone().count());
+    p1 = valids.clone().count();
 
     //part 2: validate fields
     let valids2 = valids.filter(|pp| validate_fields(pp));
-    println!("Part 1: {}", valids2.count());
+    p2 = valids2.count();
+    
+    answer(p1,p2)
 }

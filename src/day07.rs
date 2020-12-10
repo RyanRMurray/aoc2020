@@ -1,3 +1,4 @@
+use crate::utils::answer;
 use regex::Regex;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -30,7 +31,9 @@ fn bags_in(r:&Rules, b: &str) -> u32{
     }
 }
 
-pub fn day07(input:String){
+pub fn day07(input:String) -> (String,String){
+    let p1;
+    let p2;
     //big ugly parse
     let re =
         Regex::new(
@@ -77,10 +80,13 @@ pub fn day07(input:String){
 
         reachable = reachable.union(&new_set).map(|x|*x).collect();
     }
-
+    
+    p1 = reachable.len() -1;
     println!("Part 1: {}", reachable.len() - 1);
 
     //part 2: find number of bags in shiny gold bag
 
-    println!("Part 2: {}", bags_in(&rules, "shiny gold"))
+    p2 = bags_in(&rules, "shiny gold");
+    
+    answer(p1,p2)
 }

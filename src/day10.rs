@@ -1,4 +1,8 @@
-pub fn day10(input:String){
+use crate::utils::answer;
+
+pub fn day10(input:String) -> (String, String){
+    let p1;
+    let p2;
     //kind of a messy input but whatever
     let mut adaptors: Vec<u32>= vec![0];
     let mut ins: Vec<u32> = 
@@ -19,16 +23,15 @@ pub fn day10(input:String){
 
     for a in adaptors.iter(){
         match a - jolt_lv{
-            0 => (),
             1 => count_1 += 1,
-            2 => (),
             3 => count_3 += 1,
-            _ => break
+            _ => ()
         }
 
         jolt_lv = *a;
     }
-    println!("Part 1: {}", count_1 * count_3);
+
+    p1 = count_1 * count_3;
 
     //Part 2: find all adaptors that reach an adaptor, adding the number
     //of ways those adaptors can be reached, assuming "0" can be reached
@@ -38,7 +41,7 @@ pub fn day10(input:String){
 
     for to in 1..adaptors.len(){
         for from in 1..{
-            if from < to + 1 && adaptors[to] - adaptors[to-from] < 4{
+            if (from < to + 1) && adaptors[to] - adaptors[to-from] < 4{
                 paths_to[to] += paths_to[to-from]
             }else{
                 break
@@ -46,5 +49,7 @@ pub fn day10(input:String){
         }
     }
 
-    println!("Part 2: {}", paths_to.last().unwrap());
+    p2 = paths_to.last().unwrap();
+
+    answer(p1, p2)
 }
