@@ -12,7 +12,6 @@ pub fn day10(input:String){
     adaptors.sort();
     adaptors.push(adaptors.last().unwrap() + 3);
 
-
     //Part 1: Find product of 1-distance and 3-distances
     let mut jolt_lv: u32 = 0;
     let mut count_1 = 0;
@@ -48,5 +47,4 @@ pub fn day10(input:String){
     }
 
     println!("Part 2: {}", paths_to.last().unwrap());
-
 }
