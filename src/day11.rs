@@ -37,17 +37,14 @@ fn update_for(g:&Grid<Space>, p: &Pt, radial: bool) -> Option<Space>{
         return None;
     }
 
-    let it =
+    let occ_count = 
         if radial{
             g.radial_neighbours_8(p)
         }else{
             g.neighbours_8(p)
-        };
-
-    let occ_count = 
-        it.iter()
-        .map   (|pos| g.at(pos))
-        .filter(|t| **t == Space::Occupied)
+        }
+        .iter()
+        .filter(|pos| *g.at(pos)== Space::Occupied)
         .count();
 
     match (g.at(p),radial){
@@ -98,7 +95,7 @@ pub fn day11(input:String) -> (String, String){
     //with a copy for later
     let mut grid2 = grid.clone();
 
-    //part 1, step with rules til equilibrium
+    //part 1, step with rules til equilibrium, using direct neighbours
     let mut seen: HashSet<usize> = HashSet::new();
 
     loop{
@@ -111,6 +108,7 @@ pub fn day11(input:String) -> (String, String){
         }
     }
 
+    //part 2, step with rules til equilibrium, using radial neighbours
     let mut seen2: HashSet<usize> = HashSet::new();
     
     loop{
