@@ -3,24 +3,42 @@ use std::collections::HashMap;
 use std::collections::hash_map::Keys;
 use std::fmt::Display;
 
-pub type Pt = (i32,i32);
-
-pub fn pt_add((a,b):Pt, (c,d):Pt) -> Pt{
-    (a+c,b+d)
-}
-
-pub fn pt_mul((a,b):Pt, c:i32) -> Pt{
-    (a*c,b*c)
-}
-
-pub fn pt_mag((a,b):Pt) -> i32{
-    (a + b).abs()
-}
-
 pub fn cool_mod(v:i32, m:i32) -> i32{
     ((v % m) + m) % m
 }
 
+pub trait Point<T>{
+    fn add(self,other:Pt) -> Self;
+    fn mul(self,v:i32)-> Self;
+    fn rot90cw(self) -> Self;
+    fn rot90acw(self) -> Self;
+    fn mag(self) -> i32;
+}
+
+pub type Pt = (i32,i32);
+
+impl Point<Pt> for Pt{
+    fn add(self, (ox,oy):Pt) -> Self{
+        let (x,y) = self;
+        (x+ox,y+oy)
+    }
+    fn mul(self, v: i32) -> Self{
+        let (x,y) = self;
+        (x*v,y*v)
+    }
+    fn mag(self) -> i32{
+        let (x,y) = self;
+        (x + y).abs()
+    }
+    fn rot90cw(self) -> Self{
+        let (x,y) = self;
+        (-y,x)
+    }
+    fn rot90acw(self) -> Self{
+        let (x,y) = self;
+        (y,-x)
+    }
+}
 
 #[derive(Default, Debug, Clone)]
 pub struct Grid<T: Default + ToString + PartialEq>{
