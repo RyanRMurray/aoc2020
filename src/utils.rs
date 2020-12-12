@@ -5,6 +5,23 @@ use std::fmt::Display;
 
 pub type Pt = (i32,i32);
 
+pub fn pt_add((a,b):Pt, (c,d):Pt) -> Pt{
+    (a+c,b+d)
+}
+
+pub fn pt_mul((a,b):Pt, c:i32) -> Pt{
+    (a*c,b*c)
+}
+
+pub fn pt_mag((a,b):Pt) -> i32{
+    (a + b).abs()
+}
+
+pub fn cool_mod(v:i32, m:i32) -> i32{
+    ((v % m) + m) % m
+}
+
+
 #[derive(Default, Debug, Clone)]
 pub struct Grid<T: Default + ToString + PartialEq>{
     map       : HashMap<Pt,T>,
