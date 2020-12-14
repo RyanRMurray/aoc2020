@@ -23,7 +23,7 @@ pub fn day13(input:String) -> (String,String){
     
     p1 = m_i * m_t;
     
-    //enumerate the indexes to get the offset from start time
+    //Part 2: enumerate the indexes to get the offset from sequence start time...
     let enumed_table: Vec<(usize,usize)>= 
         time_table
         .enumerate()
@@ -33,7 +33,7 @@ pub fn day13(input:String) -> (String,String){
         )
         .collect();
     
-    //get big modulo M for Chinese Remainder theorem
+    //... get big modulo M for Chinese Remainder theorem...
     let big_modulo: usize = 
         enumed_table.iter()
         .map( |(_,v)| v)
