@@ -106,7 +106,7 @@ pub fn day16(input:String) -> (String,String){
     p1 = 
         scanned.iter()
         .flat_map(|v| v.iter())
-        .filter(|n| rules.some_valid(**n))
+        .filter(|n| !rules.some_valid(**n))
         .sum();
 
     //part 2: drop invalid tickets, using valid rules
