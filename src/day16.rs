@@ -138,12 +138,15 @@ pub fn day16(input:String) -> (String,String){
         )
     }
 
+    //solve which category applies to which index. Thankfully, they were nice and 
+    //there's an ascending number of categories each index can apply to, so we just
+    //sort them in ascending order and designate the one unused category to each
+    //in turn
     categories.sort_by(|(_,a),(_,b)| a.len().cmp(&b.len()));
 
     let mut taken: Vec<&str> = vec![];
     let mut order: Vec<usize> = vec![];
 
-    //solve which category applies to which index
     for (i,c) in categories{
         taken.push(
             set_subtract(c, &taken)
