@@ -3,6 +3,22 @@ use std::collections::HashMap;
 use std::collections::hash_map::Keys;
 use std::fmt::Display;
 
+pub fn intersection<T: PartialEq>(a:Vec<T>, b:Vec<T>) -> Vec<T>{
+    b.into_iter()
+    .filter( |b_elem|
+        a.contains(b_elem)
+    )
+    .collect()
+}
+
+pub fn set_subtract<T: PartialEq>(a:Vec<T>, b:&Vec<T>) -> Vec<T>{
+    a.into_iter()
+    .filter( |a_elem|
+        !b.contains(a_elem)
+    )
+    .collect()
+}
+
 pub fn cool_mod(v:i32, m:i32) -> i32{
     ((v % m) + m) % m
 }
