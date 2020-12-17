@@ -1,16 +1,26 @@
 use crate::utils::*;
 use std::collections::HashMap;
 
-//x,y,z
-type Pt3 = (i32,i32,i32);
-//x,y,z,w
-type Pt4 = (i32,i32,i32,i32);
+#[derive(PartialEq,Debug,Clone,Copy,Hash,Eq)]
+enum CoOrd{
+    //x,y,z
+    Pt3(i32,i32,i32),
+    //x,y,z,w
+    Pt4(i32,i32,i32,i32)
+}
 
-type CubeGrid = HashMap<Pt3,bool>;
-type NextGrid = HashMap<Pt3,u8>;
+type CubeGrid = HashMap<CoOrd,bool>;
+type NextGrid = HashMap<CoOrd,u8>;
 
-fn pt3_add((a,b,c):&Pt3,(d,e,f):&Pt3) -> Pt3{
-    (a+d,b+e,c+f)
+fn co_ord_add(x: &CoOrd, y: &CoOrd) -> CoOrd{
+    match (x,y){
+        (CoOrd::Pt3(a,b,c), CoOrd::Pt3(d,e,f)) =>
+            CoOrd::Pt3(a+d,b+e,c+f),
+        (CoOrd::Pt4(a,b,c,d), CoOrd::Pt4(e,f,g,h)) =>
+            CoOrd::Pt4(a+e,b+f,c+g,d+h),
+        _ =>
+            panic!("Can only add Pt3s to Pt3s, Pt4s to Pt4s!")
+    }
 }
 
 fn resolve_grid(before: &CubeGrid, counts: NextGrid) -> CubeGrid{
@@ -26,13 +36,13 @@ fn resolve_grid(before: &CubeGrid, counts: NextGrid) -> CubeGrid{
     .collect()
 }
 
-fn cycle(before: &CubeGrid, adjs: &Vec<Pt3>) -> CubeGrid{
+fn cycle(before: &CubeGrid, adjs: &Vec<CoOrd>) -> CubeGrid{
     let mut next: NextGrid = HashMap::new();
     let counts: Vec<_> = 
         before.iter()
         .map( |(k,v)|
             if *v {
-                adjs.iter().map(|a| pt3_add(k,a)).collect()
+                adjs.iter().map(|a| co_ord_add(k,a)).collect()
             } else {
                 vec![]
             }
@@ -57,13 +67,13 @@ fn count_active(grid: &CubeGrid) -> usize{
 pub fn day17(input:String) -> (String,String){
     let p1: usize;
     let p2 = 0;
-    let mut adjacencies: Vec<Pt3> = vec![];
+    let mut adjacencies: Vec<CoOrd> = vec![];
 
     //very cool nested loop
     for x in -1..=1{
         for y in -1..=1{
             for z in -1..=1{
-                adjacencies.push((x,y,z));
+                adjacencies.push(CoOrd::Pt3(x,y,z));
             }
         }
     }
@@ -76,7 +86,7 @@ pub fn day17(input:String) -> (String,String){
     for l in input.lines(){
         let mut x = 0;
         for c in l.chars(){
-            grid.insert((x,y,0), c == '#');
+            grid.insert(CoOrd::Pt3(x,y,0), c == '#');
             x += 1;
         }
         y += 1;
