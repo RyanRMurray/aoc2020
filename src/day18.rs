@@ -1,14 +1,17 @@
 use crate::utils::*;
 
-#[derive(Debug,PartialEq,Eq,Clone,Copy)]
+#[derive(Debug,PartialEq,Eq,Clone)]
 enum Exprs{
     OpenPar,
     ClosePar,
     Val(u64),
     Mul,
-    Add
+    Add,
+    SubExpr(Vec<Exprs>)
 }
 
+//there is probably a more in-built way of doing this. In Haskell you'd
+//just pass (+), (*) or (id)
 type Op = fn(u64,u64) -> u64;
 
 fn set(_:u64,b:u64) -> u64{
@@ -23,30 +26,7 @@ fn mul(a:u64,b:u64) -> u64{
     a*b
 }
 
-enum Tree<'a>{
-    Leaf(u64),
-    Node(&'a Tree<'a>,&'a Tree<'a>,Op)
-}
-
-fn to_tree(exs: &mut Vec<Exprs>) -> Tree<'static>{
-    let result = Tree::Leaf(0);
-    let mut done = false;
-
-    match exs.pop(){
-        Exprs::Val(v) => {
-            match exs.pop(){
-                None => {
-                    result = Tree::Leaf(v);
-                }
-                
-            }
-        }
-    }
-
-    result
-}
-
-
+//evaluate the expression
 fn evaluate(mut exs: Vec<Exprs>) -> u64{
     let mut total = 0;
     //true = add, false = mul, none = set
@@ -64,6 +44,25 @@ fn evaluate(mut exs: Vec<Exprs>) -> u64{
             Some(Exprs::Add) => {
                 operator = add;
             }
+            Some(Exprs::SubExpr(sub)) => {
+                total = operator(total, evaluate(sub))
+            }
+            _ => {
+                done = true;
+            }
+        }
+
+    }
+
+    return total
+}
+
+//parse sub-expressions (parentheses)
+fn parse_subs(mut exs: Vec<Exprs>) -> Vec<Exprs>{
+    let mut result: Vec<Exprs> = vec![];
+
+    while exs.len() > 0{
+        match exs.pop(){
             Some(Exprs::OpenPar) => {
                 let mut sub_expr: Vec<Exprs> = vec![];
                 let mut count = 1;
@@ -80,21 +79,63 @@ fn evaluate(mut exs: Vec<Exprs>) -> u64{
                     }
                     sub_expr.push(ex);
                 }
+                sub_expr.pop();
                 sub_expr.reverse();
-                total = operator(total, evaluate(sub_expr))
+                result.push(Exprs::SubExpr(parse_subs(sub_expr)));
             }
-            _ => {
-                done = true;
+            //You may be asking yourself why i'd need to parse for sub-expressions
+            //within sub expressions. One word:
+            //spaghetti
+            Some(Exprs::SubExpr(sub)) => { 
+                result.push(Exprs::SubExpr(parse_subs(sub)))
             }
+            Some(e) => result.push(e),
+            _ => {}
         }
+    }
+    result.reverse();
+    result
+}
 
+//turn all additions into sub-expressions so they're evaluated before muls
+fn add_precedence(before: Vec<Exprs>) -> Vec<Exprs>{
+    let mut after = before.clone();
+    let mut i = 0;
+
+    //apply to sub-expressions first
+    while i < after.len(){
+        match &after[i]{
+            Exprs::SubExpr(sub) => {
+                after[i] = Exprs::SubExpr(add_precedence(sub.to_vec()))
+            }
+            _ => {}
+        }
+        i += 1;
     }
 
-    return total
+    i = 0;
+
+    while i < after.len(){
+        match &after[i]{
+            Exprs::Add => {
+                after[i] = Exprs::SubExpr(
+                    vec![after[i-1].clone(),after[i].clone(),after[i+1].clone()]
+                );
+                after.remove(i-1);
+                after.remove(i);
+                i -= 1;
+            }
+            _ => {}
+        }
+        i += 1
+    }
+
+    parse_subs(after)
 }
+
 pub fn day18(input:String) -> (String,String){
     let p1: u64;
-    let p2 = 0;
+    let p2: u64;
 
     //parse to Expressions vector
     let input_lines: Vec<Vec<Exprs>> = 
@@ -114,11 +155,20 @@ pub fn day18(input:String) -> (String,String){
             .rev()
             .collect()
         )
+        .map(|l| parse_subs(l))
         .collect();
 
+    //part 1: just evaluate the parsed expressions
     p1 = 
         input_lines.iter()
         .map(|l| evaluate(l.to_vec()))
+        .sum();
+
+    //part 2: evaluate after turning adds into sub-expressions
+    //to promote their precedence
+    p2 =
+        input_lines.into_iter()
+        .map(|l| evaluate(add_precedence(l.to_vec())))
         .sum();
 
     answer(p1,p2)
