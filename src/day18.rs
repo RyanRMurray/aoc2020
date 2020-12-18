@@ -29,7 +29,6 @@ fn mul(a:u64,b:u64) -> u64{
 //evaluate the expression
 fn evaluate(mut exs: Vec<Exprs>) -> u64{
     let mut total = 0;
-    //true = add, false = mul, none = set
     let mut operator: Op = set;
     let mut done = false;
 
@@ -81,13 +80,17 @@ fn parse_subs(mut exs: Vec<Exprs>) -> Vec<Exprs>{
                 }
                 sub_expr.pop();
                 sub_expr.reverse();
-                result.push(Exprs::SubExpr(parse_subs(sub_expr)));
+                result.push(Exprs::SubExpr(
+                    parse_subs(sub_expr)
+                ));
             }
             //You may be asking yourself why i'd need to parse for sub-expressions
             //within sub expressions. One word:
             //spaghetti
             Some(Exprs::SubExpr(sub)) => { 
-                result.push(Exprs::SubExpr(parse_subs(sub)))
+                result.push(Exprs::SubExpr(
+                    parse_subs(sub)
+                ))
             }
             Some(e) => result.push(e),
             _ => {}
@@ -106,7 +109,9 @@ fn add_precedence(before: Vec<Exprs>) -> Vec<Exprs>{
     while i < after.len(){
         match &after[i]{
             Exprs::SubExpr(sub) => {
-                after[i] = Exprs::SubExpr(add_precedence(sub.to_vec()))
+                after[i] = Exprs::SubExpr(
+                    add_precedence(sub.to_vec())
+                )
             }
             _ => {}
         }
@@ -119,7 +124,11 @@ fn add_precedence(before: Vec<Exprs>) -> Vec<Exprs>{
         match &after[i]{
             Exprs::Add => {
                 after[i] = Exprs::SubExpr(
-                    vec![after[i-1].clone(),after[i].clone(),after[i+1].clone()]
+                    vec![
+                        after[i-1].clone(),
+                        after[i  ].clone(),
+                        after[i+1].clone()
+                    ]
                 );
                 after.remove(i-1);
                 after.remove(i);
@@ -168,7 +177,11 @@ pub fn day18(input:String) -> (String,String){
     //to promote their precedence
     p2 =
         input_lines.into_iter()
-        .map(|l| evaluate(add_precedence(l.to_vec())))
+        .map(|l| 
+            evaluate(
+                add_precedence(l.to_vec())
+            )
+        )
         .sum();
 
     answer(p1,p2)
