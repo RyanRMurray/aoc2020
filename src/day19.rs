@@ -126,6 +126,7 @@ pub fn day19(input:String) -> (String,String){
     rules.insert(9997, Rule::Branches(vec![vec![42,42,42,42,31,31,31,31],vec![9998]]));
     rules.insert(9998, Rule::Branches(vec![vec![42,42,42,42,42,31,31,31,31,31]]));
 
+    rules.insert(8, Rule::Branches(vec![vec![42,8]]));
 
     p2 =
         messages.iter()
