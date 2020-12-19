@@ -114,19 +114,8 @@ pub fn day19(input:String) -> (String,String){
         .filter(|r| *r)
         .count();
 
-    rules.insert(8, Rule::Branches(vec![vec![42],vec![9991]]));
-    rules.insert(9991, Rule::Branches(vec![vec![42,42],vec![9992]]));
-    rules.insert(9992, Rule::Branches(vec![vec![42,42,42],vec![9993]]));
-    rules.insert(9993, Rule::Branches(vec![vec![42,42,42,42],vec![9994]]));
-    rules.insert(9994, Rule::Branches(vec![vec![42,42,42,42,42]]));
-
-    rules.insert(11, Rule::Branches(vec![vec![42,31],vec![9995]]));
-    rules.insert(9995, Rule::Branches(vec![vec![42,42,31,31],vec![9996]]));
-    rules.insert(9996, Rule::Branches(vec![vec![42,42,42,31,31,31],vec![9997]]));
-    rules.insert(9997, Rule::Branches(vec![vec![42,42,42,42,31,31,31,31],vec![9998]]));
-    rules.insert(9998, Rule::Branches(vec![vec![42,42,42,42,42,31,31,31,31,31]]));
-
-    rules.insert(8, Rule::Branches(vec![vec![42,8]]));
+    rules.insert( 8, Rule::Branches(vec![vec![42],vec![42,8]]));
+    rules.insert(11, Rule::Branches(vec![vec![42,31],vec![42,11,31]]));
 
     p2 =
         messages.iter()
