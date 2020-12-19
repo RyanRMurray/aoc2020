@@ -45,9 +45,7 @@ fn consume<'a>(rules:&RuleSet, rule:u32,input:Parsing<'a>) -> Parsing<'a>{
                     .fold(Some(ins.clone()), |q,r| consume(rules, *r,q))
                 )
                 .filter( |r| r.is_some())
-                .collect::<Vec<_>>()
-                .first()
-                .cloned();
+                .nth(0);
 
             if ret.is_some(){
                 return ret.unwrap()
