@@ -61,6 +61,44 @@ fn verify(rules:&RuleSet, message:&str) -> bool{
     parsed.is_some() && parsed.unwrap().count() == 0
 }
 
+//part 2 introduces loops in rules 8 and 11, the two components of rule 0.
+//Instead of trying to deal with arbitrary loops, we explore repetitions
+//up to a fixed number of iterations (6) and see if the message is valid
+//assuming that number of iterations. Whinge all you want, it gets results.
+fn hacky_part_2_thing(rules:&mut RuleSet, message:&str) -> bool{
+    let rule8: Vec<Sequence> = vec![
+        vec![42],
+        vec![42,42],
+        vec![42,42,42],
+        vec![42,42,42,42],
+        vec![42,42,42,42,42],
+        vec![42,42,42,42,42,42],
+    ];
+
+    let rule11: Vec<Sequence> = vec![
+        vec![42,31],
+        vec![42,42,31,31],
+        vec![42,42,42,31,31,31],
+        vec![42,42,42,42,31,31,31,31],
+        vec![42,42,42,42,42,31,31,31,31,31],
+        vec![42,42,42,42,42,42,31,31,31,31,31,31],
+    ];
+
+    for a in rule8.iter(){
+        for b in rule11.iter(){
+            let mut c = a.clone();
+            c.append(&mut b.clone());
+            rules.insert(0, Rule::Branches(vec![c]));
+
+            if verify(rules,message){
+                return true
+            }
+        }
+    }
+
+    false
+}
+
 pub fn day19(input:String) -> (String,String){
     let p1;
     let p2;
@@ -112,12 +150,9 @@ pub fn day19(input:String) -> (String,String){
         .filter(|r| *r)
         .count();
 
-    rules.insert( 8, Rule::Branches(vec![vec![42],vec![42,8]]));
-    rules.insert(11, Rule::Branches(vec![vec![42,31],vec![42,11,31]]));
-
     p2 =
         messages.iter()
-        .map(|m| verify(&rules,m))
+        .map(|m| hacky_part_2_thing(&mut rules,m))
         .filter(|r| *r)
         .count();
     

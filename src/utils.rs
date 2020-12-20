@@ -159,6 +159,17 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
             print!("\n")
         }
     }
+
+    pub fn update_bounds(&mut self){
+        match self.map.keys().max(){
+            Some((x,y)) => {self.max_x = *x; self.max_y = *y;},
+            _           => panic!("No grid detected!")
+        }
+    }
+
+    pub fn as_map(&self) -> &HashMap<Pt,T>{
+        &self.map
+    }
 }
 
 pub fn answer<A:Display,B:Display>(a:A,b:B) -> (String, String){

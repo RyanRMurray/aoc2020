@@ -22,6 +22,7 @@ mod day16;
 mod day17;
 mod day18;
 mod day19;
+mod day20;
 
 type Solution = fn(String) -> (String,String);
 
@@ -32,7 +33,7 @@ fn main() {
             day05::day05, day06::day06, day07::day07, day08::day08,
             day09::day09, day10::day10, day11::day11, day12::day12,
             day13::day13, day14::day14, day15::day15, day16::day16,
-            day17::day17, day18::day18, day19::day19
+            day17::day17, day18::day18, day19::day19, day20::day20
         ];
     let args: Vec<String> = env::args().collect();
     let mut day_arg = String::new();
