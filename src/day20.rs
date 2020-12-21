@@ -67,7 +67,7 @@ fn all_possible_edges(g:&Grid<bool>) -> EdgeGroup{
     edges
 }
 
-fn valid_neighbours(a:&EdgeGroup,b:&EdgeGroup) -> bool{
+fn valid_neighbours(a:&EdgeGroup, b:&EdgeGroup) -> bool{
     for (e,_) in a.iter(){
         if b.iter().map(|(edge,_)| edge.clone()).collect::<Vec<Vec<bool>>>().contains(e){
             return true
