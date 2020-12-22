@@ -1,5 +1,5 @@
 use crate::utils::*;
-use arraydeque::{ArrayDeque, Wrapping};
+use std::collections::HashSet;
 
 const RIGHT: [Pt;10] = 
     [(9,1),(9,2),(9,3),(9,4),(9,5),(9,6),(9,7),(9,8),(9,9),(9,10)];
@@ -21,34 +21,35 @@ fn flip_grid(g:&Grid<bool>) -> Grid<bool>{
         .map(|((x,y),v)| ((9-x,*y),*v)).collect();
     
     ng.update_grid(pts);
+    ng.update_bounds();
 
     ng
 }
 
-fn rotate_grid(g:&Grid<bool>) -> Grid<bool>{
+fn rotate_grid(g:&Grid<bool>, offset: &Pt) -> Grid<bool>{
     let mut ng: Grid<bool> = Grid::new();
 
     let pts: Vec<(Pt,bool)> = 
         g.as_map().into_iter()
         .map(|(p,v)| 
-            (p.rot90cw().add((10,1))
+            (p.rot90cw().add(*offset)
             ,*v
             )
         )
         .collect();
     
     ng.update_grid(pts);
+    ng.update_bounds();
 
     ng
 }
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 struct PuzzlePiece{
     id:usize,
     content:Grid<bool>,
-    //TOP,RIGHT,BOTTOM,LEFT
-    neighbours: ArrayDeque<[Option<usize>;4],Wrapping>,
     offset:(i32,i32),
+    //TOP,RIGHT,BOTTOM,LEFT
     sides: Vec<Vec<bool>>
 }
 
@@ -66,79 +67,189 @@ impl PuzzlePiece{
         Self{
             id: n,
             content: g,
-            neighbours: ArrayDeque::from(vec![None,None,None,None]),
             offset: (0,0),
             sides: s
         }
     }
 
     fn rotate(&mut self){
-        self.content = rotate_grid(&self.content);
-        let x = self.neighbours.pop_back().unwrap();
-        self.neighbours.push_front(x);
+        self.content = rotate_grid(&self.content, &(10,1));
         let x = self.sides.pop().unwrap();
         self.sides.insert(0, x);
+        let t = self.sides.get_mut(0).unwrap();
+        t.reverse();
+        let b = self.sides.get_mut(2).unwrap();
+        b.reverse();
     }
 
     fn flip(&mut self){
         self.content = flip_grid(&self.content);
-        self.neighbours.swap(1, 3);
         self.sides.swap(1,3);
-        self.sides.get_mut(0).unwrap().reverse();
-        self.sides.get_mut(2).unwrap().reverse();
+        let t = self.sides.get_mut(0).unwrap();
+        t.reverse();
+        let b = self.sides.get_mut(2).unwrap();
+        b.reverse();
     }
 
-    fn offset_by(mut self, off:&Pt){
-        self.offset = *off;
-        self.content.offset(off);
+    fn contents(self) -> Vec<(Pt,bool)>{
+        self.content.as_map().iter().map(|(k,v)| (*k,*v)).collect()
+    }
+}
+
+#[derive(PartialEq,Debug,Clone)]
+enum Placement{
+    Criteria(Option<Vec<bool>>,Option<Vec<bool>>,Option<Vec<bool>>,Option<Vec<bool>>),
+    Piece(PuzzlePiece)
+}
+
+impl Default for Placement{
+    fn default() -> Placement{
+        Placement::Criteria(None,None,None,None)
+    }
+}
+
+
+fn fits_criteria(c:&Placement, p:&PuzzlePiece) -> bool{
+    match c{
+        Placement::Criteria(t,r,b,l) => {
+            p.sides.iter().zip(vec![t,r,b,l].iter())
+            .all(|(s,c)| match c{None => true, Some(seq) => seq == s})
+        }
+        _ => false
+    }
+}
+
+type MasterGrid = Grid<Placement>;
+
+fn fuse_criteria(a:&mut Placement,b:&Placement){
+    match (a,b){
+        (Placement::Criteria(a,b,c,d),Placement::Criteria(e,f,g,h)) => {
+            if a.is_none() {*a = e.clone()}
+            if b.is_none() {*b = f.clone()}
+            if c.is_none() {*c = g.clone()}
+            if d.is_none() {*d = h.clone()}
+        }
+        _ => {}
+    }
+}
+
+fn place(g:&mut MasterGrid, piece: PuzzlePiece, pt: Pt){
+    let north = g.entry(pt.add((0,-1))).or_insert(Placement::default());
+    fuse_criteria(north, &Placement::Criteria(None,None,Some(piece.sides.get(0).unwrap().clone()),None));
+    
+    let east  = g.entry(pt.add((1,0))).or_insert(Placement::default());
+    fuse_criteria(east, &Placement::Criteria(None,None,None,Some(piece.sides.get(1).unwrap().clone())));
+    
+    let south = g.entry(pt.add((0,1))).or_insert(Placement::default());
+    fuse_criteria(south, &Placement::Criteria(Some(piece.sides.get(2).unwrap().clone()),None,None,None));
+    
+    let west  = g.entry(pt.add((-1,0))).or_insert(Placement::default());
+    fuse_criteria(west, &Placement::Criteria(None,Some(piece.sides.get(3).unwrap().clone()),None,None));
+    
+    g.insert(pt, Placement::Piece(piece));
+}
+
+fn fits(g:&MasterGrid, pt:&Pt, piece: &mut PuzzlePiece) -> bool{
+    let ts = [true,true,true,false,true,true,true,false];
+
+    for t in ts.iter(){
+        if fits_criteria(g.at(pt), &piece){
+            return true
+        }
+        if *t {piece.rotate()} else {piece.flip()}
     }
 
-    fn to_attachable(mut self){
-        self.content =
-            SIDES.iter().flatten()
-            .fold(self.content, |acc,p| acc.delete(p));
-        self.content.offset(&(-1,-1));
-    }
+    false
+}
 
-    fn n_count(&self) -> usize{
-        self.neighbours.iter()
-        .filter(|n| n.is_some())
-        .count()
-    }
-
-    fn try_neighbour(&mut self, other:&mut PuzzlePiece) -> bool{
-        let ts = [true,true,true,false,true,true,true,true];
-
-        //for each of my sides, 
-        //check if the rotating piece can be attached by its opposite side
-        for s in 0..4{
-            match self.neighbours[s]{
-                Some(_) => {continue;}
-                _ => {}
+fn identify_corners(g:&MasterGrid) -> Vec<usize>{
+    g.keys()
+    .filter(|k| 
+        match g.at(k){
+            Placement::Piece(_) => true, _ => false
+        }
+    )
+    .filter(|k|
+        k.neighbours_4().iter()
+        .filter(|k| 
+            match g.at(k){
+                Placement::Piece(_) => true, _ => false
             }
+        )
+        .count()
+        == 2
+    )
+    .map(|k| match g.at(k){Placement::Piece(p) => p.id, _ => panic!(":(")})
+    .collect()
+}
 
-            for t in ts.iter(){
+fn generate_full_grid(g:MasterGrid) -> Grid<bool>{
+    let edge_points: Vec<Pt> = SIDES.iter().map(|s| s.iter()).flatten().map(|v|*v).collect();
+    let mut result: Grid<bool> = Grid::new();
 
-                if self.sides.get(s).unwrap() == other.sides.get((s+2)%4).unwrap() {
-                    self.neighbours[s]    = Some(other.id);
-                    other.neighbours[(s+2)%4] = Some(self.id);
-                    return true
-                }else{
-                    if *t {other.rotate();} else {other.flip();};
+    let mut offy = -1;
+    for y in g.min_y..=g.max_y{
+        let mut offx = -9;
+        for x in g.min_x..=g.max_x{
+            match g.at(&(x,y)){
+                Placement::Piece(p) => {
+                    result.update_grid(
+                        p.clone().contents()
+                        .iter()
+                        .filter(|(at,_)| !edge_points.contains(at))
+                        .map(|(at,v)| (at.add((offx-1,offy-1)),*v))
+                        .collect::<Vec<(Pt,bool)>>()
+                    );
+                }
+                _=>{}
+            }
+            offx += 9;
+        }
+        offy += 8;
+    }
+    result.update_bounds();
+
+    result
+}
+
+fn count_monsters(mut g: Grid<bool>) -> usize{
+    let ts = [true,true,true,false,true,true,true,false];
+    //one wiggly boi
+    let nessie = vec![
+                                                                                 (18,0),
+    (0,1),            (5,1),(6,1),             (11,1),(12,1),             (17,1),(18,1),(19,1),
+          (1,2),(4,2),            (7,2),(10,2),              (13,2),(16,2)  
+    ];
+    let mut monster_count = 0;
+
+    for t in ts.iter(){
+
+        for y in g.min_y..=g.max_y{
+            for x in g.min_x..g.max_x{
+                if nessie.iter().all(|off| *g.at(&(x,y).add(*off))){
+                    monster_count += 1;
                 }
             }
         }
-        false
-    }
 
+        if monster_count > 0{
+            break;
+        }
+        if *t {g = rotate_grid(&g, &(g.max_y,0)); println!("fleep");} else {g = flip_grid(&g);}
+    }
+    println!("{}", monster_count);
+
+    monster_count
 }
 
 pub fn day20(input:String) -> (String,String){
-    let p1: usize;
-    let p2 = 0;
+    let p1: u64;
+    let p2;
     let mut ids: Vec<u64> = vec![];
     let mut pieces: Vec<PuzzlePiece> = vec![];
+    let mut master: MasterGrid = Grid::new();
 
+    //parse pieces
     for (i,g) in (0..).zip(input.split("\n\n")){
         ids.push(
             g[5..9].parse::<u64>().unwrap()
@@ -148,26 +259,52 @@ pub fn day20(input:String) -> (String,String){
         grid.update_bounds();
         pieces.push(PuzzlePiece::new(grid,i));
     }
-    
-    for i in 0..pieces.len(){
-        println!("{:?}", i);
-        let mut this_piece = pieces.get(i).unwrap().clone();
-        for j in i+1..pieces.len(){
-            let mut that_piece = pieces.get(j).unwrap().clone();
-            if this_piece.try_neighbour(&mut that_piece){
-                pieces[i] = this_piece.clone();
-                pieces[j] = that_piece.clone();
+
+    //construct full grid
+    place(&mut master, pieces.remove(0), (0,0));
+    let mut found: HashSet<Pt> = HashSet::new();
+    found.insert((0,0));
+    let mut to_find: Vec<Pt> = (0,0).neighbours_4();
+    let mut subject = (0,0);
+
+    while to_find.len() > 0{
+        while found.contains(&subject){
+            if to_find.len() == 0{
+                break;
+            }
+            subject = to_find.remove(0);
+        }
+
+        let mut candidate: Option<PuzzlePiece> = None;
+        for (i, mut p) in (0..).zip(pieces.clone()){
+            if fits(&master, &subject, &mut p){
+                candidate = Some(p);
+                pieces.remove(i);
+                break;
             }
         }
+        match candidate{
+            None => {},
+            Some(c) => {
+                place(&mut master, c, subject);
+                to_find.append(&mut subject.neighbours_4());
+            }
+        }
+        found.insert(subject);
     }
+    master.update_bounds();
 
-    p1 =
-        pieces.iter()
-        .filter(|p| p.n_count() == 2)
-        /*.map(|p|
-            ids[p.id]
-        )*/
-        .count();
+    //part 1; find product of edge IDs
+    p1 = identify_corners(&master).iter()
+        .map(|i| ids[*i])
+        .product();
+
+    //part 2: construct full grid...
+
+    let res = generate_full_grid(master);
+    let dark_spots = res.as_map().values().filter(|v| **v).count();
+
+    p2 = dark_spots - (count_monsters(res) * 15);
 
     answer(p1,p2)
 }

@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
-use std::collections::hash_map::Keys;
+use std::collections::hash_map::{Keys,Entry};
 use std::fmt::Display;
-
 pub fn intersection<T: PartialEq>(a:Vec<T>, b:Vec<T>) -> Vec<T>{
     b.into_iter()
     .filter( |b_elem|
@@ -29,6 +28,7 @@ pub trait Point<T>{
     fn rot90cw(self) -> Self;
     fn rot90acw(self) -> Self;
     fn mag(self) -> i32;
+    fn neighbours_4(&self) -> Vec<Pt>;
 }
 
 pub type Pt = (i32,i32);
@@ -54,10 +54,15 @@ impl Point<Pt> for Pt{
         let (x,y) = self;
         (y,-x)
     }
+    fn neighbours_4(&self) -> Vec<Pt>{
+        vec![(0,-1),(1,0),(0,1),(-1,0)].iter()
+        .map(|n| self.add(*n))
+        .collect()
+    }
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct Grid<T: Default + ToString + PartialEq>{
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct Grid<T: Default + PartialEq>{
     map       : HashMap<Pt,T>,
     default   : T,
     pub min_x : i32,
@@ -67,7 +72,7 @@ pub struct Grid<T: Default + ToString + PartialEq>{
     pub ptr   : Pt
 }
 
-impl<T: Default + ToString + PartialEq> Grid<T>{
+impl<T: Default + PartialEq> Grid<T>{
     pub fn new() -> Grid<T>{
         Grid{
             map     : HashMap::new(),
@@ -119,6 +124,7 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
         .collect()
     }
 
+
     //Now that's what I call Spaghetti™!
     pub fn radial_neighbours_8(&self, &(x,y): &Pt) -> Vec<Pt>{
         let adjs = [(0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1)];
@@ -149,20 +155,14 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
             self.map.insert(p,v);
         }
     }
+    
+    pub fn insert(&mut self, p:Pt, val:T){
+        self.map.insert(p, val);
+    }
 
     pub fn delete(mut self, at:&Pt) -> Self{
         self.map.remove(at);
         self
-    }
-
-    //debug print function
-    pub fn print(&self){
-        for y in self.min_y..self.max_y{
-            for x in self.min_x..self.max_x{
-                print!("{}", self.at(&(x,y)).to_string())
-            }
-            print!("\n")
-        }
     }
 
     pub fn update_bounds(&mut self){
@@ -170,10 +170,18 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
             Some((x,y)) => {self.max_x = *x; self.max_y = *y;},
             _           => panic!("No grid detected!")
         }
+        match self.map.keys().min(){
+            Some((x,y)) => {self.min_x = *x; self.min_y = *y;},
+            _           => panic!("No grid detected!")
+        }
     }
 
     pub fn as_map(&self) -> &HashMap<Pt,T>{
         &self.map
+    }
+
+    pub fn entry(&mut self, p: Pt) -> Entry<Pt,T>{
+        self.map.entry(p)
     }
 
     pub fn offset(mut self, off:&Pt){
