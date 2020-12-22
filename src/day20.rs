@@ -1,7 +1,5 @@
 use crate::utils::*;
-
-type Trans = (u32,u32);
-type EdgeGroup = Vec<(Vec<bool>,Trans)>;
+use arraydeque::{ArrayDeque, Wrapping};
 
 const RIGHT: [Pt;10] = 
     [(9,1),(9,2),(9,3),(9,4),(9,5),(9,6),(9,7),(9,8),(9,9),(9,10)];
@@ -44,83 +42,132 @@ fn rotate_grid(g:&Grid<bool>) -> Grid<bool>{
     ng
 }
 
-fn all_possible_edges(g:&Grid<bool>) -> EdgeGroup{
-    //unflipped
-    let mut cp = g.clone();
-    let mut edges: EdgeGroup = vec![];
-
-    for flips in 0..1{
-        for rots in 0..3{
-            for side in SIDES.iter(){
-                edges.push(
-                    (
-                        side.iter().map(|p| *cp.at(p)).collect()
-                    ,
-                        (rots,flips)
-                    )
-                )
-            }
-            cp = rotate_grid(&cp)
-        }
-        cp = flip_grid(&cp)
-    }
-    edges
+#[derive(Clone,Debug)]
+struct PuzzlePiece{
+    id:usize,
+    content:Grid<bool>,
+    //TOP,RIGHT,BOTTOM,LEFT
+    neighbours: ArrayDeque<[Option<usize>;4],Wrapping>,
+    offset:(i32,i32),
+    sides: Vec<Vec<bool>>
 }
 
-fn valid_neighbours(a:&EdgeGroup, b:&EdgeGroup) -> bool{
-    for (e,_) in a.iter(){
-        if b.iter().map(|(edge,_)| edge.clone()).collect::<Vec<Vec<bool>>>().contains(e){
-            return true
+impl PuzzlePiece{
+    pub fn new(g:Grid<bool>, n:usize) -> Self{
+        let s = 
+            SIDES.iter()
+            .map(|sd|
+                sd.iter()
+                .map(|p| *g.at(&p))
+                .collect()
+            )
+            .collect();
+
+        Self{
+            id: n,
+            content: g,
+            neighbours: ArrayDeque::from(vec![None,None,None,None]),
+            offset: (0,0),
+            sides: s
         }
     }
-    false
+
+    fn rotate(&mut self){
+        self.content = rotate_grid(&self.content);
+        let x = self.neighbours.pop_back().unwrap();
+        self.neighbours.push_front(x);
+        let x = self.sides.pop().unwrap();
+        self.sides.insert(0, x);
+    }
+
+    fn flip(&mut self){
+        self.content = flip_grid(&self.content);
+        self.neighbours.swap(1, 3);
+        self.sides.swap(1,3);
+        self.sides.get_mut(0).unwrap().reverse();
+        self.sides.get_mut(2).unwrap().reverse();
+    }
+
+    fn offset_by(mut self, off:&Pt){
+        self.offset = *off;
+        self.content.offset(off);
+    }
+
+    fn to_attachable(mut self){
+        self.content =
+            SIDES.iter().flatten()
+            .fold(self.content, |acc,p| acc.delete(p));
+        self.content.offset(&(-1,-1));
+    }
+
+    fn n_count(&self) -> usize{
+        self.neighbours.iter()
+        .filter(|n| n.is_some())
+        .count()
+    }
+
+    fn try_neighbour(&mut self, other:&mut PuzzlePiece) -> bool{
+        let ts = [true,true,true,false,true,true,true,true];
+
+        //for each of my sides, 
+        //check if the rotating piece can be attached by its opposite side
+        for s in 0..4{
+            match self.neighbours[s]{
+                Some(_) => {continue;}
+                _ => {}
+            }
+
+            for t in ts.iter(){
+
+                if self.sides.get(s).unwrap() == other.sides.get((s+2)%4).unwrap() {
+                    self.neighbours[s]    = Some(other.id);
+                    other.neighbours[(s+2)%4] = Some(self.id);
+                    return true
+                }else{
+                    if *t {other.rotate();} else {other.flip();};
+                }
+            }
+        }
+        false
+    }
+
 }
 
 pub fn day20(input:String) -> (String,String){
-    let p1;
+    let p1: usize;
     let p2 = 0;
-    let mut ids: Vec<u64>     = vec![];
-    let mut pieces: Vec<Grid<bool>> = vec![];
+    let mut ids: Vec<u64> = vec![];
+    let mut pieces: Vec<PuzzlePiece> = vec![];
 
-
-    //parse: a series of grids with corresponding IDs
-    //all grid pieces will have dimensions (0..9)x(0..9)
-
-    for g in input.split("\n\n"){
+    for (i,g) in (0..).zip(input.split("\n\n")){
         ids.push(
             g[5..9].parse::<u64>().unwrap()
         );
-        let mut grid:Grid<bool> = Grid::new();
-        grid.from_input(g[10..].to_string(), &|c| c == '#', false);
+        let mut grid: Grid<bool> = Grid::new();
+        grid.from_input(g[10..].to_string(), &|c|c=='#',false);
         grid.update_bounds();
-
-        pieces.push(grid);
+        pieces.push(PuzzlePiece::new(grid,i));
     }
-
-    //part 1: find the ids of the corner pieces (by finding pieces with two neighbours)
-    let mut neighbours: Vec<i32> = vec![0; pieces.len()];
-
-    //precalculate all the possible edges a piece can have...
-    let groups: Vec<EdgeGroup> = 
-        pieces.iter()
-        .map(|g| all_possible_edges(&g))
-        .collect();
-
-    //...and record groups that are valid neighbours
-    for a in 0..groups.len(){
-        for b in a+1..groups.len(){
-            if valid_neighbours(&groups[a], &groups[b]){
-                neighbours[a] += 1;
-                neighbours[b] += 1;
+    
+    for i in 0..pieces.len(){
+        println!("{:?}", i);
+        let mut this_piece = pieces.get(i).unwrap().clone();
+        for j in i+1..pieces.len(){
+            let mut that_piece = pieces.get(j).unwrap().clone();
+            if this_piece.try_neighbour(&mut that_piece){
+                pieces[i] = this_piece.clone();
+                pieces[j] = that_piece.clone();
             }
         }
     }
 
     p1 =
-        neighbours.iter()
-        .zip(ids.iter())
-        .filter(|(ns,_)| **ns == 2)
-        .fold(1, |acc,(_,id)| acc * id);
-    
+        pieces.iter()
+        .filter(|p| p.n_count() == 2)
+        /*.map(|p|
+            ids[p.id]
+        )*/
+        .count();
+
     answer(p1,p2)
 }

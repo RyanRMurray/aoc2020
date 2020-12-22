@@ -150,6 +150,11 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
         }
     }
 
+    pub fn delete(mut self, at:&Pt) -> Self{
+        self.map.remove(at);
+        self
+    }
+
     //debug print function
     pub fn print(&self){
         for y in self.min_y..self.max_y{
@@ -169,6 +174,12 @@ impl<T: Default + ToString + PartialEq> Grid<T>{
 
     pub fn as_map(&self) -> &HashMap<Pt,T>{
         &self.map
+    }
+
+    pub fn offset(mut self, off:&Pt){
+        for (k,_) in self.map.iter_mut(){
+            k.add(*off);
+        }
     }
 }
 
