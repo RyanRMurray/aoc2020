@@ -1,3 +1,22 @@
+/**********************************************************************************************************************************************************
+ *This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.                                           *
+ *                                                                                                                                                        *
+ *What is here was dangerous and repulsive to us. This message is a warning about danger.                                                                 *
+ *                                                                                                                                                        *
+ *The danger is in a particular location... it increases towards a center... the center of danger is here... of a particular size and shape, and below us.*
+ *                                                                                                                                                        *
+ *The danger is still present, in your time, as it was in ours.                                                                                           *
+ *                                                                                                                                                        *
+ *The danger is to the body, and it can kill.                                                                                                             *
+ *                                                                                                                                                        *
+ *The form of the danger is an emanation of energy.                                                                                                       *
+ *                                                                                                                                                        *
+ *The danger is unleashed only if you substantially disturb this place physically. This place is best shunned and left uninhabited.                       *
+ **********************************************************************************************************************************************************/
+
+
+
+
 use crate::utils::*;
 use std::collections::HashSet;
 
@@ -26,13 +45,13 @@ fn flip_grid(g:&Grid<bool>) -> Grid<bool>{
     ng
 }
 
-fn rotate_grid(g:&Grid<bool>, offset: &Pt) -> Grid<bool>{
+fn rotate_grid(g:&Grid<bool>) -> Grid<bool>{
     let mut ng: Grid<bool> = Grid::new();
 
     let pts: Vec<(Pt,bool)> = 
         g.as_map().into_iter()
         .map(|(p,v)| 
-            (p.rot90cw().add(*offset)
+            (p.rot90cw().add((10,1))
             ,*v
             )
         )
@@ -73,7 +92,7 @@ impl PuzzlePiece{
     }
 
     fn rotate(&mut self){
-        self.content = rotate_grid(&self.content, &(10,1));
+        self.content = rotate_grid(&self.content);
         let x = self.sides.pop().unwrap();
         self.sides.insert(0, x);
         let t = self.sides.get_mut(0).unwrap();
@@ -203,7 +222,7 @@ fn generate_full_grid(g:MasterGrid) -> Grid<bool>{
                 }
                 _=>{}
             }
-            offx += 9;
+            offx += 8;
         }
         offy += 8;
     }
@@ -223,7 +242,8 @@ fn count_monsters(mut g: Grid<bool>) -> usize{
     let mut monster_count = 0;
 
     for t in ts.iter(){
-        test(&g);
+
+        //test(&g);
         for y in g.min_y..=g.max_y{
             for x in g.min_x..g.max_x{
                 if nessie.iter().all(|off| *g.at(&(x,y).add(*off))){
@@ -235,21 +255,30 @@ fn count_monsters(mut g: Grid<bool>) -> usize{
         if monster_count > 0{
             break;
         }
-        if *t {g = rotate_grid(&g, &(g.max_y,0)); println!("fleep");} else {g = flip_grid(&g);}
+        if *t {
+            let mut ng: Grid<bool> = Grid::new();
+        
+            let pts: Vec<(Pt,bool)> = 
+                g.as_map().into_iter()
+                .map(|(p,v)| 
+                    (p.rot90cw().add((g.max_y,1))
+                    ,*v
+                    )
+                )
+                .collect();
+            
+            ng.update_grid(pts);
+            ng.update_bounds();
+        
+            g = ng;
+            
+        } else {
+            g = flip_grid(&g);
+        }
     }
     println!("{}", monster_count);
 
     monster_count
-}
-
-fn test(g:&Grid<bool>){
-    for y in g.min_y..=g.max_y{
-        for x in g.min_x..=g.max_x{
-            print!("{}", if *g.at(&(x,y)) {'#'} else {'.'})
-        }
-        print!("\n");
-    }
-    print!("\n");
 }
 
 pub fn day20(input:String) -> (String,String){
