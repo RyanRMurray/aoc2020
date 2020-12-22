@@ -223,7 +223,7 @@ fn count_monsters(mut g: Grid<bool>) -> usize{
     let mut monster_count = 0;
 
     for t in ts.iter(){
-
+        test(&g);
         for y in g.min_y..=g.max_y{
             for x in g.min_x..g.max_x{
                 if nessie.iter().all(|off| *g.at(&(x,y).add(*off))){
@@ -240,6 +240,16 @@ fn count_monsters(mut g: Grid<bool>) -> usize{
     println!("{}", monster_count);
 
     monster_count
+}
+
+fn test(g:&Grid<bool>){
+    for y in g.min_y..=g.max_y{
+        for x in g.min_x..=g.max_x{
+            print!("{}", if *g.at(&(x,y)) {'#'} else {'.'})
+        }
+        print!("\n");
+    }
+    print!("\n");
 }
 
 pub fn day20(input:String) -> (String,String){
